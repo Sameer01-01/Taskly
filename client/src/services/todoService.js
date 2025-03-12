@@ -2,20 +2,18 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api/todos';
 
-// Helper function to get auth token
-const getAuthConfig = () => {
+// Helper function to get auth token from localStorage
+const getAuthHeader = () => {
   const user = JSON.parse(localStorage.getItem('user'));
-  return {
-    headers: {
-      Authorization: `Bearer ${user?.token}`,
-    },
-  };
+  return user ? { Authorization: `Bearer ${user.token}` } : {};
 };
 
 // Get all todos
-export const getTodos = async () => {
+export const getAllTodos = async () => {
   try {
-    const response = await axios.get(API_URL, getAuthConfig());
+    const response = await axios.get(API_URL, {
+      headers: getAuthHeader()
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching todos:', error);
@@ -24,9 +22,13 @@ export const getTodos = async () => {
 };
 
 // Add a new todo
-export const createTodo = async (todo) => {
+export const createTodo = async (todoData) => {
   try {
-    const response = await axios.post(API_URL, todo, getAuthConfig());
+    console.log('Creating todo with data:', todoData);
+    const response = await axios.post(API_URL, todoData, {
+      headers: getAuthHeader()
+    });
+    console.log('Create todo response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error creating todo:', error);
@@ -35,9 +37,13 @@ export const createTodo = async (todo) => {
 };
 
 // Update a todo
-export const updateTodo = async (id, todo) => {
+export const updateTodo = async (id, todoData) => {
   try {
-    const response = await axios.put(`${API_URL}/${id}`, todo, getAuthConfig());
+    console.log('Updating todo with id:', id, 'and data:', todoData);
+    const response = await axios.put(`${API_URL}/${id}`, todoData, {
+      headers: getAuthHeader()
+    });
+    console.log('Update todo response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error updating todo:', error);
@@ -48,8 +54,10 @@ export const updateTodo = async (id, todo) => {
 // Delete a todo
 export const deleteTodo = async (id) => {
   try {
-    const response = await axios.delete(`${API_URL}/${id}`, getAuthConfig());
-    return response.data;
+    await axios.delete(`${API_URL}/${id}`, {
+      headers: getAuthHeader()
+    });
+    return true;
   } catch (error) {
     console.error('Error deleting todo:', error);
     throw error;

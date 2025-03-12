@@ -6,8 +6,10 @@ const Todo = require('../models/todoModel');
 const getTodos = async (req, res) => {
   try {
     const todos = await Todo.find({ user: req.user.id }).sort({ createdAt: -1 });
+    console.log('Returning todos to client:', todos);
     res.status(200).json(todos);
   } catch (error) {
+    console.error('Error in getTodos:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -17,17 +19,30 @@ const getTodos = async (req, res) => {
 // @access  Private
 const createTodo = async (req, res) => {
   try {
+    console.log('Create todo request body:', req.body);
+    
     if (!req.body.text) {
       return res.status(400).json({ message: 'Please add a text field' });
     }
 
-    const todo = await Todo.create({
+    const todoData = {
       text: req.body.text,
       user: req.user.id,
-    });
+    };
+
+    // Add dueDate if provided
+    if (req.body.dueDate) {
+      console.log('Due date provided:', req.body.dueDate);
+      todoData.dueDate = req.body.dueDate;
+    }
+
+    console.log('Creating todo with data:', todoData);
+    const todo = await Todo.create(todoData);
+    console.log('Created todo:', todo);
 
     res.status(201).json(todo);
   } catch (error) {
+    console.error('Error creating todo:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -37,6 +52,8 @@ const createTodo = async (req, res) => {
 // @access  Private
 const updateTodo = async (req, res) => {
   try {
+    console.log('Update todo request - ID:', req.params.id, 'Body:', req.body);
+    
     const todo = await Todo.findById(req.params.id);
 
     if (!todo) {
@@ -52,8 +69,10 @@ const updateTodo = async (req, res) => {
       new: true,
     });
 
+    console.log('Updated todo:', updatedTodo);
     res.status(200).json(updatedTodo);
   } catch (error) {
+    console.error('Error updating todo:', error);
     res.status(500).json({ message: error.message });
   }
 };

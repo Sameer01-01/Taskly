@@ -1,3 +1,150 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-surface-1: #121212;
+  --color-surface-2: #1e1e1e;
+  --color-surface-3: #2a2a2a;
+  --color-surface-4: #323232;
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #a0a0a0;
+  --color-text-tertiary: #6c6c6c;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-accent: #22d3ee;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-border: #2a2a2a;
+}
+
+body {
+  @apply bg-surface-1 text-text-primary;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+@layer components {
+  .taskly-input {
+    @apply bg-surface-3 border-2 border-surface-4 text-text-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent shadow-md;
+  }
+  
+  .taskly-btn-primary {
+    @apply bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .taskly-btn-secondary {
+    @apply bg-surface-3 hover:bg-surface-4 text-text-secondary px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium;
+  }
+
+  .taskly-card {
+    @apply bg-surface-2 rounded-xl shadow-md border border-border p-6;
+  }
+
+  .taskly-task-item {
+    @apply bg-surface-2 border border-border rounded-lg p-4 transition-all duration-200 hover:shadow-md flex items-center justify-between gap-4;
+  }
+
+  .taskly-checkbox {
+    @apply h-5 w-5 rounded-md border-2 border-primary text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-transparent bg-surface-3;
+  }
+  
+  /* Date picker styles */
+  .taskly-date-picker {
+    @apply taskly-input;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* For the date picker */
+.react-datepicker {
+  @apply bg-surface-2 border border-surface-4 rounded-lg shadow-lg;
+}
+
+.react-datepicker__header {
+  @apply bg-surface-3 border-b border-surface-4;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  @apply text-text-primary;
+}
+
+.react-datepicker__day-name,
+.react-datepicker__day,
+.react-datepicker__time-name {
+  @apply text-text-secondary;
+}
+
+.react-datepicker__day:hover,
+.react-datepicker__month-text:hover,
+.react-datepicker__quarter-text:hover,
+.react-datepicker__year-text:hover {
+  @apply bg-surface-4 rounded-full;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected,
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--keyboard-selected,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__quarter-text--keyboard-selected,
+.react-datepicker__year-text--selected,
+.react-datepicker__year-text--keyboard-selected {
+  @apply bg-primary text-white rounded-full;
+}
+
+.react-datepicker__day--disabled,
+.react-datepicker__month-text--disabled,
+.react-datepicker__quarter-text--disabled,
+.react-datepicker__year-text--disabled {
+  @apply text-text-tertiary;
+}
+
+.react-datepicker__triangle {
+  display: none;
+}
+
+.react-datepicker__navigation-icon::before {
+  @apply border-text-secondary;
+}
+
+.react-datepicker__year-dropdown,
+.react-datepicker__month-dropdown,
+.react-datepicker__month-year-dropdown {
+  @apply bg-surface-3 border border-surface-4;
+}
+
+.react-datepicker__year-option,
+.react-datepicker__month-option,
+.react-datepicker__month-year-option {
+  @apply text-text-secondary hover:bg-surface-4;
+}
+
+.react-datepicker__year-option--selected_year,
+.react-datepicker__month-option--selected_month,
+.react-datepicker__month-year-option--selected {
+  @apply text-primary;
+}
+
+.react-datepicker__close-icon::after {
+  @apply bg-surface-4 text-text-primary;
+}

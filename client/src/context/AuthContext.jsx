@@ -1,18 +1,27 @@
-import { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+// Create context
 export const AuthContext = createContext();
+
+// Custom hook to use the auth context
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Check if user is stored in localStorage on app load
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      setIsAuthenticated(true);
     }
   }, []);
 
@@ -27,6 +36,7 @@ export const AuthProvider = ({ children }) => {
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));
         setUser(response.data);
+        setIsAuthenticated(true);
       }
       
       setIsLoading(false);
@@ -52,6 +62,7 @@ export const AuthProvider = ({ children }) => {
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));
         setUser(response.data);
+        setIsAuthenticated(true);
       }
       
       setIsLoading(false);
@@ -70,6 +81,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('user');
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
@@ -78,6 +90,7 @@ export const AuthProvider = ({ children }) => {
         user,
         isLoading,
         error,
+        isAuthenticated,
         register,
         login,
         logout,

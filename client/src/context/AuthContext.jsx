@@ -1,6 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 // Create context
 export const AuthContext = createContext();
 
@@ -31,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:5000/api/users', userData);
+      const response = await axios.post(`${API_URL}/api/users`, userData);
       
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:5000/api/users/login', userData);
+      const response = await axios.post(`${API_URL}/api/users/login`, userData);
       
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));

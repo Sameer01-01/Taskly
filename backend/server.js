@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const { errorHandler } = require('./middleware/errorMiddleware');
 const connectDB = require('./config/db');
 const port = process.env.PORT || 5000;
+const mongoose = require('mongoose');
 
 // Connect to database
 connectDB();
@@ -45,7 +46,11 @@ app.use('/api/users', require('./routes/userRoutes'));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Serve frontend in production
@@ -67,7 +72,7 @@ app.use(errorHandler);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.log('Unhandled Rejection:', err);
+  console.error('Unhandled Promise Rejection:', err);
   // Close server & exit process
   process.exit(1);
 });
@@ -77,4 +82,14 @@ app.listen(port, () => {
   console.log(`Server started on port ${port}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
-}); 
+});
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('MongoDB Connected'.green);
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:'.red, err);
+    process.exit(1);
+  }); 

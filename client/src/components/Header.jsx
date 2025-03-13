@@ -25,19 +25,36 @@ const Header = () => {
           </Link>
         </div>
         
-        {user && (
-          <div className="flex items-center space-x-4">
-            <span className="text-text-secondary text-sm hidden sm:inline-block">
-              {user.email}
-            </span>
-            <button
-              onClick={handleLogout}
-              className="text-sm bg-surface-3 hover:bg-surface text-text-primary px-3 py-1.5 rounded-md transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        )}
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <>
+              <span className="text-text-secondary text-sm hidden sm:inline-block">
+                {user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-sm bg-surface-3 hover:bg-surface text-text-primary px-3 py-1.5 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-sm bg-surface-3 hover:bg-surface text-text-primary px-3 py-1.5 rounded-md transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="text-sm bg-primary hover:bg-primary-dark text-white px-3 py-1.5 rounded-md transition-colors"
+              >
+                Register
+              </Link>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

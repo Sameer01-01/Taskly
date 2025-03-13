@@ -23,7 +23,7 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 
 // For debugging - remove in production
-console.log('API URL:', API_URL);
+console.log('Auth API URL:', API_URL);
 
 // Create context
 export const AuthContext = createContext();
@@ -42,12 +42,28 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user is stored in localStorage on app load
     const storedUser = localStorage.getItem('user');
+    console.log('Checking localStorage for user on load:', storedUser ? 'Found user' : 'No user found');
+    
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
+        console.log('Parsed user data:', { 
+          email: userData.email,
+          hasToken: !!userData.token,
+          tokenPreview: userData.token ? `${userData.token.substr(0, 10)}...` : 'no token'
+        });
+        
         setUser(userData);
         setIsAuthenticated(true);
-        console.log('User restored from localStorage:', userData);
+        
+        // Immediately verify token
+        checkTokenValidity().then(isValid => {
+          console.log('Token validation result:', isValid);
+          if (!isValid) {
+            console.log('Token invalid, logging out user');
+            logout();
+          }
+        });
       } catch (error) {
         console.error('Error parsing user from localStorage:', error);
         localStorage.removeItem('user');
@@ -62,11 +78,12 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('Registering user with API URL:', `${API_URL}/api/users`);
-      console.log('Registration data:', userData);
+      console.log('Registration data:', { email: userData.email, hasPassword: !!userData.password });
       
       const response = await axios.post(`${API_URL}/api/users`, userData);
       
-      console.log('Registration response:', response.data);
+      console.log('Registration response status:', response.status);
+      console.log('Registration response has token:', !!response.data?.token);
       
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));
@@ -94,16 +111,19 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('Logging in user with API URL:', `${API_URL}/api/users/login`);
-      console.log('Login data:', { email: userData.email });
+      console.log('Login attempt for email:', userData.email);
       
       const response = await axios.post(`${API_URL}/api/users/login`, userData);
       
-      console.log('Login response:', response.data);
+      console.log('Login response status:', response.status);
+      console.log('Login response has token:', !!response.data?.token);
       
       if (response.data) {
+        console.log('Storing user data in localStorage');
         localStorage.setItem('user', JSON.stringify(response.data));
         setUser(response.data);
         setIsAuthenticated(true);
+        console.log('Authentication state updated:', { isAuthenticated: true });
       }
       
       setIsLoading(false);
@@ -121,25 +141,34 @@ export const AuthProvider = ({ children }) => {
 
   // Logout user
   const logout = () => {
+    console.log('Logging out user');
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+    console.log('Authentication state cleared');
   };
 
   // Verify token validity
   const checkTokenValidity = async () => {
-    if (!user || !user.token) return false;
+    const currentUser = user || JSON.parse(localStorage.getItem('user') || 'null');
+    console.log('Checking token validity, user exists:', !!currentUser);
+    
+    if (!currentUser || !currentUser.token) {
+      console.log('No user or token found');
+      return false;
+    }
     
     try {
+      console.log('Making token validation request');
       const response = await axios.get(`${API_URL}/api/users/me`, {
         headers: {
-          Authorization: `Bearer ${user.token}`
+          Authorization: `Bearer ${currentUser.token}`
         }
       });
+      console.log('Token validation successful');
       return !!response.data;
     } catch (error) {
-      console.error('Token validation error:', error);
-      // If token is invalid, log out the user
+      console.error('Token validation error:', error.response?.status || error);
       logout();
       return false;
     }

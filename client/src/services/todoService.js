@@ -28,11 +28,18 @@ console.log('Todo API URL:', API_URL);
 const getAuthHeader = () => {
   try {
     const user = JSON.parse(localStorage.getItem('user'));
+    console.log('Getting auth header, user found:', !!user);
+    
     if (!user || !user.token) {
-      console.warn('No auth token available');
+      console.warn('No auth token available in localStorage');
       return {};
     }
-    return { Authorization: `Bearer ${user.token}` };
+    
+    console.log('Token preview:', user.token.substr(0, 10) + '...');
+    return {
+      Authorization: `Bearer ${user.token}`,
+      'Content-Type': 'application/json'
+    };
   } catch (error) {
     console.error('Error getting auth token:', error);
     return {};
@@ -42,17 +49,24 @@ const getAuthHeader = () => {
 // Get all todos
 export const getAllTodos = async () => {
   try {
+    const headers = getAuthHeader();
     console.log('Fetching todos from:', API_URL);
-    console.log('Using headers:', getAuthHeader());
+    console.log('Using auth header:', !!headers.Authorization);
     
-    const response = await axios.get(API_URL, {
-      headers: getAuthHeader()
-    });
+    if (!headers.Authorization) {
+      throw new Error('No authentication token available');
+    }
     
-    console.log('Todos fetched successfully:', response.data);
+    const response = await axios.get(API_URL, { headers });
+    
+    console.log('Todos fetched successfully:', response.data.length + ' todos');
     return response.data;
   } catch (error) {
-    console.error('Error fetching todos:', error.response?.data || error.message || error);
+    console.error('Error fetching todos:', {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+      hasToken: !!getAuthHeader().Authorization
+    });
     throw error;
   }
 };
@@ -60,18 +74,24 @@ export const getAllTodos = async () => {
 // Add a new todo
 export const createTodo = async (todoData) => {
   try {
+    const headers = getAuthHeader();
     console.log('Creating todo at:', API_URL);
-    console.log('Todo data:', todoData);
-    console.log('Using headers:', getAuthHeader());
+    console.log('Using auth header:', !!headers.Authorization);
     
-    const response = await axios.post(API_URL, todoData, {
-      headers: getAuthHeader()
-    });
+    if (!headers.Authorization) {
+      throw new Error('No authentication token available');
+    }
+    
+    const response = await axios.post(API_URL, todoData, { headers });
     
     console.log('Todo created successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error creating todo:', error.response?.data || error.message || error);
+    console.error('Error creating todo:', {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+      hasToken: !!getAuthHeader().Authorization
+    });
     throw error;
   }
 };
@@ -79,18 +99,24 @@ export const createTodo = async (todoData) => {
 // Update a todo
 export const updateTodo = async (id, todoData) => {
   try {
+    const headers = getAuthHeader();
     console.log(`Updating todo at: ${API_URL}/${id}`);
-    console.log('Update data:', todoData);
-    console.log('Using headers:', getAuthHeader());
+    console.log('Using auth header:', !!headers.Authorization);
     
-    const response = await axios.put(`${API_URL}/${id}`, todoData, {
-      headers: getAuthHeader()
-    });
+    if (!headers.Authorization) {
+      throw new Error('No authentication token available');
+    }
+    
+    const response = await axios.put(`${API_URL}/${id}`, todoData, { headers });
     
     console.log('Todo updated successfully:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error updating todo:', error.response?.data || error.message || error);
+    console.error('Error updating todo:', {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+      hasToken: !!getAuthHeader().Authorization
+    });
     throw error;
   }
 };
@@ -98,17 +124,24 @@ export const updateTodo = async (id, todoData) => {
 // Delete a todo
 export const deleteTodo = async (id) => {
   try {
+    const headers = getAuthHeader();
     console.log(`Deleting todo at: ${API_URL}/${id}`);
-    console.log('Using headers:', getAuthHeader());
+    console.log('Using auth header:', !!headers.Authorization);
     
-    await axios.delete(`${API_URL}/${id}`, {
-      headers: getAuthHeader()
-    });
+    if (!headers.Authorization) {
+      throw new Error('No authentication token available');
+    }
+    
+    await axios.delete(`${API_URL}/${id}`, { headers });
     
     console.log('Todo deleted successfully');
     return true;
   } catch (error) {
-    console.error('Error deleting todo:', error.response?.data || error.message || error);
+    console.error('Error deleting todo:', {
+      status: error.response?.status,
+      message: error.response?.data?.message || error.message,
+      hasToken: !!getAuthHeader().Authorization
+    });
     throw error;
   }
 }; 

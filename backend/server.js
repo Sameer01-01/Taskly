@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 // CORS configuration for deployment
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://yourdomain.com' // Replace with your actual deployed frontend URL
+    ? process.env.FRONTEND_URL || 'https://taskly-one-mu.vercel.app/' // Replace with your actual deployed frontend URL
     : 'http://localhost:3000',
   credentials: true,
 }));

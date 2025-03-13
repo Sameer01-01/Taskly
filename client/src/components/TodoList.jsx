@@ -69,11 +69,14 @@ const TodoList = () => {
 
   const handleDeleteTodo = async (id) => {
     try {
-      await deleteTodo(id);
-      setTodos(todos.filter(todo => todo._id !== id));
+      const success = await deleteTodo(id);
+      if (success) {
+        setTodos(todos.filter(todo => todo._id !== id));
+      }
     } catch (err) {
       console.error('Error deleting todo:', err);
       setError('Failed to delete todo. Please try again.');
+      // Don't update the todos state if deletion failed
     }
   };
 

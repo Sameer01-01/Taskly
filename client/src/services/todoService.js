@@ -129,10 +129,17 @@ export const deleteTodo = async (id) => {
       throw new Error('No authentication token available');
     }
     
-    await axios.delete(`${API_URL}/${id}`, { headers });
-    
-    console.log('Todo deleted successfully');
-    return true;
+    try {
+      await axios.delete(`${API_URL}/${id}`, { headers });
+      console.log('Todo deleted successfully');
+      return true;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        console.warn(`Todo with ID ${id} not found`);
+        return true; // Consider it a success if the todo doesn't exist
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Error deleting todo:', {
       status: error.response?.status,

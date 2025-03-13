@@ -1,7 +1,7 @@
-import { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import Todo from './Todo';
 import TodoForm from './TodoForm';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { getAllTodos, createTodo, updateTodo, deleteTodo } from '../services/todoService';
 
 const TodoList = () => {
@@ -9,19 +9,31 @@ const TodoList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentTodo, setCurrentTodo] = useState(null);
-  const { user } = useContext(AuthContext);
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    fetchTodos();
-  }, []);
+    // Only fetch todos if user is authenticated
+    if (isAuthenticated && user) {
+      fetchTodos();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user]);
 
   const fetchTodos = async () => {
     try {
       setLoading(true);
-      const fetchedTodos = await getAllTodos();
-      console.log("Fetched todos:", fetchedTodos);
-      setTodos(fetchedTodos);
       setError('');
+      
+      console.log('Fetching todos for authenticated user:', {
+        isAuthenticated,
+        hasUser: !!user,
+        hasToken: !!user?.token
+      });
+      
+      const fetchedTodos = await getAllTodos();
+      console.log("Fetched todos:", fetchedTodos.length);
+      setTodos(fetchedTodos);
     } catch (err) {
       console.error('Error fetching todos:', err);
       setError('Failed to fetch todos. Please try again.');
@@ -87,7 +99,7 @@ const TodoList = () => {
     setCurrentTodo(null);
   };
 
-  if (!user) {
+  if (!isAuthenticated || !user) {
     return (
       <div className="flex flex-col items-center justify-center p-6 bg-surface-1 rounded-lg shadow-lg">
         <p className="text-text-primary text-lg">Please log in to manage your todos.</p>

@@ -5,12 +5,18 @@ const Todo = require('../models/todoModel');
 // @access  Private
 const getTodos = async (req, res) => {
   try {
-    const todos = await Todo.find({ user: req.user.id }).sort({ createdAt: -1 });
-    console.log('Returning todos to client:', todos);
+    const todos = await Todo.find({ user: req.user.id })
+      .sort({ createdAt: -1 })
+      .lean();
+    
+    console.log(`Returning ${todos.length} todos to user ${req.user.id}`);
     res.status(200).json(todos);
   } catch (error) {
     console.error('Error in getTodos:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      message: 'Error fetching todos',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -19,31 +25,52 @@ const getTodos = async (req, res) => {
 // @access  Private
 const createTodo = async (req, res) => {
   try {
-    console.log('Create todo request body:', req.body);
+    const { text, dueDate } = req.body;
     
-    if (!req.body.text) {
-      return res.status(400).json({ message: 'Please add a text field' });
+    // Validate input
+    if (!text) {
+      return res.status(400).json({ 
+        message: 'Please add a text field',
+        fields: {
+          text: 'Text is required'
+        }
+      });
+    }
+
+    // Validate dueDate if provided
+    if (dueDate) {
+      const date = new Date(dueDate);
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({ 
+          message: 'Invalid due date format',
+          fields: {
+            dueDate: 'Please provide a valid date'
+          }
+        });
+      }
     }
 
     const todoData = {
-      text: req.body.text,
+      text,
       user: req.user.id,
+      ...(dueDate && { dueDate: new Date(dueDate) })
     };
 
-    // Add dueDate if provided
-    if (req.body.dueDate) {
-      console.log('Due date provided:', req.body.dueDate);
-      todoData.dueDate = req.body.dueDate;
-    }
+    console.log('Creating todo with data:', {
+      ...todoData,
+      user: req.user.id
+    });
 
-    console.log('Creating todo with data:', todoData);
     const todo = await Todo.create(todoData);
     console.log('Created todo:', todo);
 
     res.status(201).json(todo);
   } catch (error) {
     console.error('Error creating todo:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      message: 'Error creating todo',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -52,10 +79,11 @@ const createTodo = async (req, res) => {
 // @access  Private
 const updateTodo = async (req, res) => {
   try {
+    const { text, dueDate, completed } = req.body;
     console.log('Update todo request - ID:', req.params.id, 'Body:', req.body);
     
+    // Find todo
     const todo = await Todo.findById(req.params.id);
-
     if (!todo) {
       return res.status(404).json({ message: 'Todo not found' });
     }
@@ -65,15 +93,39 @@ const updateTodo = async (req, res) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    const updatedTodo = await Todo.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    // Validate dueDate if provided
+    if (dueDate) {
+      const date = new Date(dueDate);
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({ 
+          message: 'Invalid due date format',
+          fields: {
+            dueDate: 'Please provide a valid date'
+          }
+        });
+      }
+    }
+
+    // Prepare update data
+    const updateData = {};
+    if (text !== undefined) updateData.text = text;
+    if (dueDate !== undefined) updateData.dueDate = new Date(dueDate);
+    if (completed !== undefined) updateData.completed = completed;
+
+    const updatedTodo = await Todo.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
 
     console.log('Updated todo:', updatedTodo);
     res.status(200).json(updatedTodo);
   } catch (error) {
     console.error('Error updating todo:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      message: 'Error updating todo',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -94,10 +146,18 @@ const deleteTodo = async (req, res) => {
     }
 
     await todo.deleteOne();
+    console.log(`Deleted todo ${req.params.id} for user ${req.user.id}`);
 
-    res.status(200).json({ id: req.params.id });
+    res.status(200).json({ 
+      message: 'Todo deleted successfully',
+      id: req.params.id 
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting todo:', error);
+    res.status(500).json({ 
+      message: 'Error deleting todo',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

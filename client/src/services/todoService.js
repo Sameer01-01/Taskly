@@ -5,17 +5,17 @@ const getApiUrl = () => {
   // Check if window object exists (we're in a browser)
   if (typeof window !== 'undefined') {
     // Try to get from window.__env__ if it exists (some setups use this)
-    if (window.__env__ && window.__env__.REACT_APP_API_URL) {
-      return `${window.__env__.REACT_APP_API_URL}/api/todos`;
+    if (window.__env__ && window.__env__.VITE_API_URL) {
+      return `${window.__env__.VITE_API_URL}/api/todos`;
     }
     
-    // Try regular env access (works in Create React App if properly configured)
-    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) {
-      return `${process.env.REACT_APP_API_URL}/api/todos`;
+    // Try Vite env access
+    if (import.meta.env && import.meta.env.VITE_API_URL) {
+      return `${import.meta.env.VITE_API_URL}/api/todos`;
     }
   }
   
-  // Fallback to hardcoded value
+  // Fallback to hardcoded value - REPLACE WITH YOUR ACTUAL BACKEND URL
   return 'https://todo-caoe.onrender.com/api/todos';
 };
 
@@ -76,7 +76,7 @@ export const createTodo = async (todoData) => {
   try {
     const headers = getAuthHeader();
     console.log('Creating todo at:', API_URL);
-    console.log('Using auth header:', !!headers.Authorization);
+    console.log('Todo data:', todoData);
     
     if (!headers.Authorization) {
       throw new Error('No authentication token available');
@@ -89,8 +89,7 @@ export const createTodo = async (todoData) => {
   } catch (error) {
     console.error('Error creating todo:', {
       status: error.response?.status,
-      message: error.response?.data?.message || error.message,
-      hasToken: !!getAuthHeader().Authorization
+      message: error.response?.data?.message || error.message
     });
     throw error;
   }
@@ -101,7 +100,7 @@ export const updateTodo = async (id, todoData) => {
   try {
     const headers = getAuthHeader();
     console.log(`Updating todo at: ${API_URL}/${id}`);
-    console.log('Using auth header:', !!headers.Authorization);
+    console.log('Update data:', todoData);
     
     if (!headers.Authorization) {
       throw new Error('No authentication token available');
@@ -114,8 +113,7 @@ export const updateTodo = async (id, todoData) => {
   } catch (error) {
     console.error('Error updating todo:', {
       status: error.response?.status,
-      message: error.response?.data?.message || error.message,
-      hasToken: !!getAuthHeader().Authorization
+      message: error.response?.data?.message || error.message
     });
     throw error;
   }
@@ -126,7 +124,6 @@ export const deleteTodo = async (id) => {
   try {
     const headers = getAuthHeader();
     console.log(`Deleting todo at: ${API_URL}/${id}`);
-    console.log('Using auth header:', !!headers.Authorization);
     
     if (!headers.Authorization) {
       throw new Error('No authentication token available');
@@ -139,8 +136,7 @@ export const deleteTodo = async (id) => {
   } catch (error) {
     console.error('Error deleting todo:', {
       status: error.response?.status,
-      message: error.response?.data?.message || error.message,
-      hasToken: !!getAuthHeader().Authorization
+      message: error.response?.data?.message || error.message
     });
     throw error;
   }

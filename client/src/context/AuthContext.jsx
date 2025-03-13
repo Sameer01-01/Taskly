@@ -6,17 +6,17 @@ const getApiUrl = () => {
   // Check if window object exists (we're in a browser)
   if (typeof window !== 'undefined') {
     // Try to get from window.__env__ if it exists (some setups use this)
-    if (window.__env__ && window.__env__.REACT_APP_API_URL) {
-      return window.__env__.REACT_APP_API_URL;
+    if (window.__env__ && window.__env__.VITE_API_URL) {
+      return window.__env__.VITE_API_URL;
     }
     
-    // Try regular env access (works in Create React App if properly configured)
-    if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) {
-      return process.env.REACT_APP_API_URL;
+    // Try Vite env access
+    if (import.meta.env && import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
     }
   }
   
-  // Fallback to hardcoded value
+  // Fallback to hardcoded value - REPLACE WITH YOUR ACTUAL BACKEND URL
   return 'https://todo-caoe.onrender.com';
 };
 
@@ -55,15 +55,6 @@ export const AuthProvider = ({ children }) => {
         
         setUser(userData);
         setIsAuthenticated(true);
-        
-        // Immediately verify token
-        checkTokenValidity().then(isValid => {
-          console.log('Token validation result:', isValid);
-          if (!isValid) {
-            console.log('Token invalid, logging out user');
-            logout();
-          }
-        });
       } catch (error) {
         console.error('Error parsing user from localStorage:', error);
         localStorage.removeItem('user');
@@ -115,21 +106,38 @@ export const AuthProvider = ({ children }) => {
       
       const response = await axios.post(`${API_URL}/api/users/login`, userData);
       
-      console.log('Login response status:', response.status);
-      console.log('Login response has token:', !!response.data?.token);
+      console.log('Login response:', {
+        status: response.status,
+        hasData: !!response.data,
+        hasToken: !!response.data?.token,
+        token: response.data?.token ? `${response.data.token.substring(0, 10)}...` : 'no token'
+      });
       
-      if (response.data) {
-        console.log('Storing user data in localStorage');
-        localStorage.setItem('user', JSON.stringify(response.data));
-        setUser(response.data);
-        setIsAuthenticated(true);
-        console.log('Authentication state updated:', { isAuthenticated: true });
+      if (!response.data) {
+        throw new Error('Login response missing data');
       }
+      
+      console.log('Storing user data in localStorage');
+      localStorage.setItem('user', JSON.stringify(response.data));
+      
+      // Verify data was stored correctly
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      console.log('Verified stored user data:', {
+        hasStoredUser: !!storedUser,
+        hasStoredToken: !!storedUser?.token
+      });
+      
+      setUser(response.data);
+      setIsAuthenticated(true);
+      console.log('Authentication state updated:', { isAuthenticated: true });
       
       setIsLoading(false);
       return response.data;
     } catch (error) {
-      console.error('Login error:', error.response || error);
+      console.error('Login error:', {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message
+      });
       setError(
         error.response?.data?.message || 
         'Login failed. Please check your credentials.'
@@ -148,32 +156,6 @@ export const AuthProvider = ({ children }) => {
     console.log('Authentication state cleared');
   };
 
-  // Verify token validity
-  const checkTokenValidity = async () => {
-    const currentUser = user || JSON.parse(localStorage.getItem('user') || 'null');
-    console.log('Checking token validity, user exists:', !!currentUser);
-    
-    if (!currentUser || !currentUser.token) {
-      console.log('No user or token found');
-      return false;
-    }
-    
-    try {
-      console.log('Making token validation request');
-      const response = await axios.get(`${API_URL}/api/users/me`, {
-        headers: {
-          Authorization: `Bearer ${currentUser.token}`
-        }
-      });
-      console.log('Token validation successful');
-      return !!response.data;
-    } catch (error) {
-      console.error('Token validation error:', error.response?.status || error);
-      logout();
-      return false;
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -184,8 +166,7 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
-        setError,
-        checkTokenValidity
+        setError
       }}
     >
       {children}
